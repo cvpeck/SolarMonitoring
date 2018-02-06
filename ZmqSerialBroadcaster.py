@@ -6,15 +6,15 @@ Module documentation.
 import sys
 #import os
 import configparser
-import time
+#import time
+import logging
 import zmqserialbroadcaster.serialreader.SerialReader as SR
 import zmqserialbroadcaster.zmqbroadcaster.ZmqBroadcaster as ZB
-import logging
 
 # Global variables
 
-serial_reader = SR.SerialReader();
-zmq_broadcaster = ZB.ZmqBroadcaster();
+serial_reader = SR.SerialReader()
+zmq_broadcaster = ZB.ZmqBroadcaster()
 
 
 # Class declarations

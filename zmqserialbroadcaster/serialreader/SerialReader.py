@@ -9,7 +9,6 @@ class SerialReader:
         self.bits = 8
         self.parity = "N"
         self.stop = 1
-        self.serial_connection = serial.Serial()
 
     def open_port(self):
         try:
