@@ -1,5 +1,6 @@
 import serial
 import logging
+from pylibftdi import Device
 
 class SerialReader:
 
@@ -9,6 +10,7 @@ class SerialReader:
         self.bits = 8
         self.parity = "N"
         self.stop = 1
+	device = Device('A7022SP5')
 
     def open_port(self):
         try:
