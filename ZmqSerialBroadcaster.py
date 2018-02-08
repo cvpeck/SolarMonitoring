@@ -41,7 +41,7 @@ def main():
     read_config_file()
     try:
         serial_reader.open_port()
-    except:
+    except Exception as e:
         logging.error("Could not open serial port " + serial_reader.device)
         exit(1)
 
