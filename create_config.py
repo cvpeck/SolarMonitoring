@@ -1,8 +1,9 @@
 import configparser
 
 config = configparser.ConfigParser()
-config['SERIALPORT'] = {'Device': '/dev.xx1',
-    'Speed':    '9600',
+config['SERIALPORT'] = {
+    'Device': '/dev.xx1',
+    'baud':    '9600',
     'DataBits': '8',
     'Parity': 'N',
     'Stop': '1'};

@@ -5,7 +5,7 @@
 import serial
 import logging
 from pylibftdi import Device
-
+from pylibftdi import FtdiError
 
 class SerialReader:
     """ Class to manage serial devices - ftdi or plain serial """
@@ -14,25 +14,25 @@ class SerialReader:
         self.bits = 8
         self.parity = "N"
         self.stop = 1
-        self.port_open = False
+        self.is_port_open = False
         self.serial_data = ""
         self.device = ""
-        # self.serial_connection = ""
+        self.serial_connection = serial.Serial()
+        self.logging_handler = logging.getLogger()
+        self.logging_handler.setLevel('DEBUG')
 
     def open_port(self):
         """ Attempts to open port, first as an ftdi device, then as a plain serial device """
-        if not self.port_open:
+        if not self.is_port_open:
             try:
                 # Try opening device as a FTDI identifier
                 self.serial_connection = Device(self.device)
                 self.serial_connection.open()
-                self.port_open = True
+                self.is_port_open = True
                 logging.info("Sucessfully opened ftdi device")
-            except:
-                # TODO actually find out what exception is raised here
-                # raise Exception
+            except FtdiError as e:
                 logging.warning("Could not open ftdi device")
-        if not self.port_open:
+        if not self.is_port_open:
             try:
                 self.serial_connection = serial.Serial(
                     port=self.device,
@@ -42,18 +42,26 @@ class SerialReader:
                     bytesize=self.bits,
                     timeout=1
                 )
-                self.port_open = True
-                logging.info("Sucessfully opened plain serial device")
-            except serial.serialutil.SerialException:
+                self.is_port_open = True
+                logging.info("Successfully opened plain serial device")
+            except serial.serialutil.SerialException as e:
                 # raise Exception
                 logging.warning("Could not open serial device")
-        if not self.port_open:
+        if not self.is_port_open:
             logging.error("Could not open any serial device")
             raise IOError
 
+    def close_port(self):
+        if self.is_port_open:
+            try:
+                self.serial_connection.close()
+            except:
+                logging.warning("Attempt to close port that is not open")
+            self.is_port_open = False
+
     def read_data(self):
         """ Read data from already open serial port """
-        if self.port_open:
+        if self.is_port_open:
             try:
                 self.serial_data = self.serial_connection.readline()
             except:
@@ -65,7 +73,7 @@ class SerialReader:
 
     def write_data(self, serial_data):
         """ Write data to already open serial port """
-        if self.port_open:
+        if self.is_port_open:
             try:
                 self.serial_connection.write(serial_data)
             except:

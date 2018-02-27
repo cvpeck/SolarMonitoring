@@ -1,20 +1,23 @@
+#! /bin/env python3
+# -*- coding: utf-8 -*-
+
 """
 Module documentation.
 """
 
 # Imports
 import sys
-#import os
+# import os
 import configparser
-#import time
+# import time
 import logging
-import zmqserialbroadcaster.serialreader.SerialReader as SR
-import zmqserialbroadcaster.zmqbroadcaster.ZmqBroadcaster as ZB
+import zmqserialbroadcaster.serialreader.SerialReader as serialReader
+import zmqserialbroadcaster.zmqbroadcaster.ZmqBroadcaster as zmqBroadcaster
 
 # Global variables
 
-serial_reader = SR.SerialReader()
-zmq_broadcaster = ZB.ZmqBroadcaster()
+serial_reader = serialReader.SerialReader()
+zmq_broadcaster = zmqBroadcaster.ZmqBroadcaster()
 
 
 # Class declarations
@@ -22,6 +25,10 @@ zmq_broadcaster = ZB.ZmqBroadcaster()
 # Function declarations
 
 def read_config_file():
+    """
+    reads config file
+    :return:
+    """
     config = configparser.ConfigParser()
     config.read('solar.ini')
     serial_reader.device = config['SERIALPORT']['device']
@@ -32,6 +39,10 @@ def read_config_file():
 
 
 def main():
+    """
+    main thingy
+    :return:
+    """
     args = sys.argv[1:]
 
     if not args:
@@ -41,7 +52,7 @@ def main():
     read_config_file()
     try:
         serial_reader.open_port()
-    except Exception as e:
+    except Exception:
         logging.error("Could not open serial port " + serial_reader.device)
         exit(1)
 
@@ -52,7 +63,3 @@ def main():
 # Main body
 if __name__ == '__main__':
     main()
-
-
-
-

@@ -1,8 +1,24 @@
+#!./bin/python3
+# -*- coding: utf-8 -*-
+#
+""" zmq stuff """
 
 
 class ZmqBroadcaster:
+    """
+    stuff
+    """
+
     def open_zmq(self):
-        return true
+        """
+        open zmq
+        :return:
+        """
+        pass
 
     def write_data(self):
-        return true
+        """
+        write data
+        :return:
+        """
+        pass
