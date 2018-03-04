@@ -2,7 +2,7 @@ import configparser
 
 config = configparser.ConfigParser()
 config['SERIALPORT'] = {
-    'Device': '/dev.xx1',
+    'Device': 'FT0K3AEM',
     'baud':    '9600',
     'DataBits': '8',
     'Parity': 'N',

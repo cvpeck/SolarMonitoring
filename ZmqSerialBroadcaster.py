@@ -36,7 +36,7 @@ def read_config_file():
     serial_reader.databits = config['SERIALPORT']['databits']
     serial_reader.baud = config['SERIALPORT']['baud']
     serial_reader.stop = config['SERIALPORT']['stop']
-
+    zmq_broadcaster.port = config['ZMQ']['port']
 
 def main():
     """
@@ -58,6 +58,7 @@ def main():
 
     while 1:
         serial_reader.read_data()
+        zmq_broadcaster.write_data(serial_reader.data)
 
 
 # Main body

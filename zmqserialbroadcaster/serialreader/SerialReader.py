@@ -7,6 +7,7 @@ import logging
 from pylibftdi import Device
 from pylibftdi import FtdiError
 
+
 class SerialReader:
     """ Class to manage serial devices - ftdi or plain serial """
     def __init__(self):
@@ -15,7 +16,7 @@ class SerialReader:
         self.parity = "N"
         self.stop = 1
         self.is_port_open = False
-        self.serial_data = ""
+        self.data = ""
         self.device = ""
         self.serial_connection = serial.Serial()
         self.logging_handler = logging.getLogger()
@@ -30,7 +31,7 @@ class SerialReader:
                 self.serial_connection.open()
                 self.is_port_open = True
                 logging.info("Sucessfully opened ftdi device")
-            except FtdiError as e:
+            except FtdiError:
                 logging.warning("Could not open ftdi device")
         if not self.is_port_open:
             try:
@@ -44,7 +45,7 @@ class SerialReader:
                 )
                 self.is_port_open = True
                 logging.info("Successfully opened plain serial device")
-            except serial.serialutil.SerialException as e:
+            except serial.serialutil.SerialException:
                 # raise Exception
                 logging.warning("Could not open serial device")
         if not self.is_port_open:
@@ -52,6 +53,7 @@ class SerialReader:
             raise IOError
 
     def close_port(self):
+        """ Closes the serial port if it is open"""
         if self.is_port_open:
             try:
                 self.serial_connection.close()
@@ -61,9 +63,10 @@ class SerialReader:
 
     def read_data(self):
         """ Read data from already open serial port """
+
         if self.is_port_open:
             try:
-                self.serial_data = self.serial_connection.readline()
+                self.data = self.serial_connection.readline()
             except:
                 # raise Exception
                 logging.error("Could not read from serial port")
