@@ -11,14 +11,14 @@ import configparser
 import logging
 import zmqserialbroadcaster.serialreader.SerialReader as serialReader
 import zmqserialbroadcaster.zmqbroadcaster.ZmqBroadcaster as zmqBroadcaster
-import zmqserialbroadcaster.solarlogger.SolarLogger as solarLogger
+import zmqserialbroadcaster.dataimporter.DataImporter as dataImporter
 
 
 # Global variables
 
 serial_reader = serialReader.SerialReader()
 zmq_broadcaster = zmqBroadcaster.ZmqBroadcaster()
-solar_logger = solarLogger.SolarLogger()
+solar_logger = dataImporter.DataImporter()
 
 
 # Class declarations
