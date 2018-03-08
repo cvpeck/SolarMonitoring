@@ -6,7 +6,7 @@ import json
 import logging
 
 
-class SolarLogger:
+class DataImporter:
 
     def __init__(self):
         self.input_file = None

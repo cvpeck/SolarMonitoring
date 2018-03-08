@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 
-class TestSolarLogger(TestCase):
+class TestDataImporter(TestCase):
     def test_read_from_file(self):
         self.fail()
 
