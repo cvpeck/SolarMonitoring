@@ -16,11 +16,12 @@ class SerialReader:
         self.parity = "N"
         self.stop = 1
         self.is_port_open = False
-        self.data = ""
-        self.device = ""
+        self.data = None
+        self.device = None
         self.serial_connection = serial.Serial()
         self.logging_handler = logging.getLogger()
         self.logging_handler.setLevel('DEBUG')
+        self.json_format = None
 
     def open_port(self):
         """ Attempts to open port, first as an ftdi device, then as a plain serial device """

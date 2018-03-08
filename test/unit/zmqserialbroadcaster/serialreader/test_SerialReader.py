@@ -16,9 +16,9 @@ class TestSerialReader(TestCase):
     ftdi_connected = pytest.mark.skipif(TEST_FTDI == False,
                                         reason="FTDI cable required for test")
     def setUp(self):
-        """ Setup routine for testing class. Creates various types of serial devices to be used by tests """
-        """ Use lib ftdi tools to find appropriate correct device for testing and use """
-        """ Mac example - system_profiler SPUSBDataType | grep -C 7 FTDI """
+        """ Setup routine for testing class. Creates various types of serial devices to be used by tests
+         Use lib ftdi tools to find appropriate correct device for testing and use
+        Mac example - system_profiler SPUSBDataType | grep -C 7 FTDI """
         self.serial_ftdi_device = serialReader.SerialReader()
         self.serial_ftdi_device.device = "FT0K3AEM"
         self.serial_plain_device = serialReader.SerialReader()

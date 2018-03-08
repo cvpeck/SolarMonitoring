@@ -33,7 +33,7 @@ class ZmqBroadcaster:
                     raise e
             else:
                 try:
-                    self._socket.bind_to_random_port()
+                    self._socket.bind_to_random_port("tcp://*")
                     self.is_socket_open = True
                 except zmq.error.ZMQError as e:
                     logging.error("Could not open zmq on random port ")

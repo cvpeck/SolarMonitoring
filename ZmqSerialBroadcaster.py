@@ -7,17 +7,18 @@ Module documentation.
 
 # Imports
 import sys
-# import os
 import configparser
-# import time
 import logging
 import zmqserialbroadcaster.serialreader.SerialReader as serialReader
 import zmqserialbroadcaster.zmqbroadcaster.ZmqBroadcaster as zmqBroadcaster
+import zmqserialbroadcaster.solarlogger.SolarLogger as solarLogger
+
 
 # Global variables
 
 serial_reader = serialReader.SerialReader()
 zmq_broadcaster = zmqBroadcaster.ZmqBroadcaster()
+solar_logger = solarLogger.SolarLogger()
 
 
 # Class declarations
@@ -36,7 +37,9 @@ def read_config_file():
     serial_reader.databits = config['SERIALPORT']['databits']
     serial_reader.baud = config['SERIALPORT']['baud']
     serial_reader.stop = config['SERIALPORT']['stop']
-    zmq_broadcaster.port = config['ZMQ']['port']
+    # TODO add defaults
+    # zmq_broadcaster.port = config['ZMQ']['port']
+    solar_logger.input_file = config['SOLAR']['input_file']
 
 def main():
     """
@@ -50,11 +53,28 @@ def main():
         sys.exit(1)
 
     read_config_file()
+
+    solar_logger.read_from_file()
+    zmq_broadcaster.write_data(solar_logger.get_data())
+
     try:
         serial_reader.open_port()
     except Exception:
         logging.error("Could not open serial port " + serial_reader.device)
         exit(1)
+
+        serial_reader.json_format = (
+            ('DailyRunTime','%n:%n:%n'),
+            ('Date', '%n.%n.%n'),
+            ('GeneratorCurrent', '%n'),
+            ('GeneratorPower', '%n'),
+            ('GeneratorVoltage', '%n'),
+            ('LineCurrentFeedIn', '%n'),
+            ('LineVoltage', '%n'),
+            ('OperatingState', '%n'),
+            ('PowerFedIn', '%n'),
+            ('UnitTemperature', '%n')
+        )
 
     while 1:
         serial_reader.read_data()
