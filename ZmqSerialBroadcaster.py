@@ -64,16 +64,16 @@ def main():
         exit(1)
 
         serial_reader.json_format = (
-            ('DailyRunTime','%n:%n:%n'),
-            ('Date', '%n.%n.%n'),
-            ('GeneratorCurrent', '%n'),
-            ('GeneratorPower', '%n'),
-            ('GeneratorVoltage', '%n'),
-            ('LineCurrentFeedIn', '%n'),
-            ('LineVoltage', '%n'),
-            ('OperatingState', '%n'),
-            ('PowerFedIn', '%n'),
-            ('UnitTemperature', '%n')
+            ('DailyRunTime','%02u:%02u:%02u'),
+            ('Date', '%02u.%02u.%04u'),
+            ('GeneratorCurrent', '%u'),
+            ('GeneratorPower', '%u'),
+            ('GeneratorVoltage', '%u'),
+            ('LineCurrentFeedIn', '%u'),
+            ('LineVoltage', '%u'),
+            ('OperatingState', '%u'),
+            ('PowerFedIn', '%u'),
+            ('UnitTemperature', '%u')
         )
 
     while 1:

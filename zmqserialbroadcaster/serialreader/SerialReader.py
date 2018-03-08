@@ -18,7 +18,7 @@ class SerialReader:
         self.is_port_open = False
         self.data = None
         self.device = None
-        self.serial_connection = serial.Serial()
+        self.serial_connection = None
         self.logging_handler = logging.getLogger()
         self.logging_handler.setLevel('DEBUG')
         self.json_format = None
