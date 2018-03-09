@@ -9,21 +9,37 @@ Module documentation.
 import sys
 import configparser
 import logging
+import json
+from threading import Thread
+
 import zmqserialbroadcaster.serialreader.SerialReader as serialReader
 import zmqserialbroadcaster.zmqbroadcaster.ZmqBroadcaster as zmqBroadcaster
 import zmqserialbroadcaster.dataimporter.DataImporter as dataImporter
+
+import zmqserialbroadcaster.zmqdiagnostics.ZmqDiagnostics as zmqDiagnostics
 
 
 # Global variables
 
 serial_reader = serialReader.SerialReader()
 zmq_broadcaster = zmqBroadcaster.ZmqBroadcaster()
-solar_logger = dataImporter.DataImporter()
+zmq_diagnostics = zmqDiagnostics.ZmqDiagnostics()
+data_importer = dataImporter.DataImporter()
 
 
 # Class declarations
 
 # Function declarations
+
+def activate_zmq_diagnostics():
+    """
+    Creates a zmq listener thread that subscribes to all topics
+    :return:
+    """
+    zmq_diagnostics.port = zmq_broadcaster.port
+    zmq_diagnostics.open_zmq()
+    thread = Thread(target=zmq_diagnostics.display_zmq_messages, args=[])
+    thread.start()
 
 def read_config_file():
     """
@@ -39,7 +55,17 @@ def read_config_file():
     serial_reader.stop = config['SERIALPORT']['stop']
     # TODO add defaults
     # zmq_broadcaster.port = config['ZMQ']['port']
-    solar_logger.input_file = config['SOLAR']['input_file']
+    data_importer.input_file = config['SOLAR']['input_file']
+
+def startup_zmq():
+    zmq_broadcaster.topic = '10001'
+    zmq_broadcaster.open_zmq()
+    activate_zmq_diagnostics()
+    json_data = (data_importer.get_data())
+    # print(json.dumps(data))
+    for entry in json_data:
+        zmq_broadcaster.write_data(entry)
+
 
 def main():
     """
@@ -53,10 +79,9 @@ def main():
         sys.exit(1)
 
     read_config_file()
-
-    solar_logger.read_from_file()
-    zmq_broadcaster.write_data(solar_logger.get_data())
-
+    data_importer.read_from_file()
+    startup_zmq()
+    
     try:
         serial_reader.open_port()
     except Exception:

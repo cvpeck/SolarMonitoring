@@ -15,8 +15,9 @@ class DataImporter:
     def read_from_file(self):
         """ Read json data from file"""
         try:
-            self._data = json.load(open(self.input_file))
-            pprint(self._data)
+            self._data = json.load(open(self.input_file, 'r'))
+            logging.debug('Read data %s', self._data)
+            # pprint(self._data)
         except FileNotFoundError:
             logging.warning("Could not open data file " + self.filename)
 

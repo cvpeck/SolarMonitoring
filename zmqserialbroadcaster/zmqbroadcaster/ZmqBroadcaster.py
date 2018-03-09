@@ -12,8 +12,8 @@ class ZmqBroadcaster:
     ZMQ message broadcaster.
     """
     def __init__(self):
-        self.port = ""
-        self.topic = ""
+        self.port = ''
+        self.topic = ''
         self._context = zmq.Context()
         self._socket = self._context.socket(zmq.PUB)
         self.is_socket_open = False
@@ -33,7 +33,7 @@ class ZmqBroadcaster:
                     raise e
             else:
                 try:
-                    self._socket.bind_to_random_port("tcp://*")
+                    self.port = self._socket.bind_to_random_port("tcp://*")
                     self.is_socket_open = True
                 except zmq.error.ZMQError as e:
                     logging.error("Could not open zmq on random port ")
@@ -50,13 +50,13 @@ class ZmqBroadcaster:
             except zmq.error.ZMQError as e:
                 logging.error("Fatal zmq error", e)
                 raise e
+
+        if self.topic != "":
+            try:
+                self._socket.send_string("%s %s" % (self.topic, messagedata), encoding="utf-8")
+            except Exception as e:
+                logging.error("Could not write zmq message to port")
+                raise e
         else:
-            if self.topic != "":
-                try:
-                    self._socket.send_string("%s %s" % (self.topic, messagedata), encoding="utf-8")
-                except Exception as e:
-                    logging.error("Could not write zmq message to port")
-                    raise e
-            else:
-                logging.error("ZMQ message topic not set")
-                raise zmq.error.ZMQError
+            logging.error("ZMQ message topic not set")
+            raise zmq.error.ZMQError
