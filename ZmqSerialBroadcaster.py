@@ -9,7 +9,6 @@ Module documentation.
 import sys
 import configparser
 import logging
-import json
 from threading import Thread
 
 import zmqserialbroadcaster.serialreader.SerialReader as serialReader
@@ -41,6 +40,7 @@ def activate_zmq_diagnostics():
     thread = Thread(target=zmq_diagnostics.display_zmq_messages, args=[])
     thread.start()
 
+
 def read_config_file():
     """
     reads config file
@@ -56,6 +56,7 @@ def read_config_file():
     # TODO add defaults
     # zmq_broadcaster.port = config['ZMQ']['port']
     data_importer.input_file = config['SOLAR']['input_file']
+
 
 def startup_zmq():
     zmq_broadcaster.topic = '10001'
@@ -81,7 +82,7 @@ def main():
     read_config_file()
     data_importer.read_from_file()
     startup_zmq()
-    
+
     try:
         serial_reader.open_port()
     except Exception:
@@ -89,7 +90,7 @@ def main():
         exit(1)
 
         serial_reader.json_format = (
-            ('DailyRunTime','%02u:%02u:%02u'),
+            ('DailyRunTime', '%02u:%02u:%02u'),
             ('Date', '%02u.%02u.%04u'),
             ('GeneratorCurrent', '%u'),
             ('GeneratorPower', '%u'),
