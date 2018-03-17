@@ -4,6 +4,7 @@
 """ Serial device manager """
 import serial
 import logging
+import json
 from pylibftdi import Device
 from pylibftdi import FtdiError
 
@@ -16,12 +17,13 @@ class SerialReader:
         self.parity = "N"
         self.stop = 1
         self.is_port_open = False
-        self.data = None
+        self.raw_data = None
         self.device = None
         self.serial_connection = None
         self.logging_handler = logging.getLogger()
         self.logging_handler.setLevel('DEBUG')
         self.json_format = None
+        self.json_data = None
 
     def open_port(self):
         """ Attempts to open port, first as an ftdi device, then as a plain serial device """
@@ -67,7 +69,7 @@ class SerialReader:
 
         if self.is_port_open:
             try:
-                self.data = self.serial_connection.readline()
+                self.raw_data = self.serial_connection.readline()
             except:
                 # raise Exception
                 logging.error("Could not read from serial port")
@@ -83,3 +85,12 @@ class SerialReader:
             except:
                 # raise exception
                 logging.error("Attempt to write data to a closed port")
+
+    def format_data(self):
+        if self.json_data:
+            split_line = self.raw_data.split(' ')
+            i = 0
+            for raw_data in split_line:
+                logging.debug('raw data - %s', raw_data)
+                json_item = json.encode(self.json_format[i], raw_data)
+                logging.debug('encoded data - %s', json_item)

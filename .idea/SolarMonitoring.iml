@@ -5,7 +5,7 @@
       <excludeFolder url="file://$MODULE_DIR$/venv" />
       <excludeFolder url="file://$MODULE_DIR$/venv_win" />
     </content>
-    <orderEntry type="jdk" jdkName="WINDOWS Python 3.6 (SolarMonitoring)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="MAC Python 3.5 (SolarMonitoring)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PackageRequirementsSettings">

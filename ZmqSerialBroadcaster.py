@@ -9,6 +9,7 @@ Module documentation.
 import sys
 import configparser
 import logging
+import pprint
 from threading import Thread
 
 import zmqserialbroadcaster.serialreader.SerialReader as serialReader
@@ -55,17 +56,62 @@ def read_config_file():
     serial_reader.stop = config['SERIALPORT']['stop']
     # TODO add defaults
     # zmq_broadcaster.port = config['ZMQ']['port']
-    data_importer.input_file = config['SOLAR']['input_file']
+    data_importer.input_json_file = config['SOLAR']['input_json_file']
+    data_importer.input_csv_file = config['SOLAR']['input_csv_file']
 
 
 def startup_zmq():
     zmq_broadcaster.topic = '10001'
     zmq_broadcaster.open_zmq()
     activate_zmq_diagnostics()
-    json_data = (data_importer.get_data())
-    # print(json.dumps(data))
-    for entry in json_data:
+
+
+def load_existing_data():
+    data_importer.json_format = [
+        'Date',
+        'DailyRunTime',
+        'OperatingState',
+        'GeneratorVoltage',
+        'GeneratorCurrent',
+        'GeneratorPower',
+        'LineVoltage',
+        'LineCurrentFeedIn',
+        'PowerFedIn',
+        'UnitTemperature'
+    ]
+    # loads data from csv file
+    imported_data = data_importer.read_from_csv_file()
+    for entry in imported_data:
         zmq_broadcaster.write_data(entry)
+    # loads data from json file
+     #print(json.dumps(data))
+#    for entry in data_importer.read_from_json_file():
+#        zmq_broadcaster.write_data(entry)
+
+
+def load_serial_data():
+    try:
+        serial_reader.open_port()
+    except Exception:
+        logging.error("Could not open serial port " + serial_reader.device)
+        exit(1)
+
+        serial_reader.json_format = [
+            'Date',
+            'DailyRunTime',
+            'OperatingState',
+            'GeneratorVoltage',
+            'GeneratorCurrent',
+            'GeneratorPower',
+            'LineVoltage',
+            'LineCurrentFeedIn',
+            'PowerFedIn',
+            'UnitTemperature'
+            ]
+
+    while 1:
+        serial_reader.read_data()
+        zmq_broadcaster.write_data(serial_reader.json_data)
 
 
 def main():
@@ -80,31 +126,10 @@ def main():
         sys.exit(1)
 
     read_config_file()
-    data_importer.read_from_file()
     startup_zmq()
+    load_existing_data()
+#   load_serial_data()
 
-    try:
-        serial_reader.open_port()
-    except Exception:
-        logging.error("Could not open serial port " + serial_reader.device)
-        exit(1)
-
-        serial_reader.json_format = (
-            ('DailyRunTime', '%02u:%02u:%02u'),
-            ('Date', '%02u.%02u.%04u'),
-            ('GeneratorCurrent', '%u'),
-            ('GeneratorPower', '%u'),
-            ('GeneratorVoltage', '%u'),
-            ('LineCurrentFeedIn', '%u'),
-            ('LineVoltage', '%u'),
-            ('OperatingState', '%u'),
-            ('PowerFedIn', '%u'),
-            ('UnitTemperature', '%u')
-        )
-
-    while 1:
-        serial_reader.read_data()
-        zmq_broadcaster.write_data(serial_reader.data)
 
 
 # Main body
