@@ -153,6 +153,8 @@ class ApproxScalar(ApproxBase):
     """
     Perform approximate comparisons for single numbers only.
     """
+    DEFAULT_ABSOLUTE_TOLERANCE = 1e-12
+    DEFAULT_RELATIVE_TOLERANCE = 1e-6
 
     def __repr__(self):
         """
@@ -223,7 +225,7 @@ class ApproxScalar(ApproxBase):
 
         # Figure out what the absolute tolerance should be.  ``self.abs`` is
         # either None or a value specified by the user.
-        absolute_tolerance = set_default(self.abs, 1e-12)
+        absolute_tolerance = set_default(self.abs, self.DEFAULT_ABSOLUTE_TOLERANCE)
 
         if absolute_tolerance < 0:
             raise ValueError("absolute tolerance can't be negative: {}".format(absolute_tolerance))
@@ -241,7 +243,7 @@ class ApproxScalar(ApproxBase):
         # we've made sure the user didn't ask for an absolute tolerance only,
         # because we don't want to raise errors about the relative tolerance if
         # we aren't even going to use it.
-        relative_tolerance = set_default(self.rel, 1e-6) * abs(self.expected)
+        relative_tolerance = set_default(self.rel, self.DEFAULT_RELATIVE_TOLERANCE) * abs(self.expected)
 
         if relative_tolerance < 0:
             raise ValueError("relative tolerance can't be negative: {}".format(absolute_tolerance))
@@ -250,6 +252,13 @@ class ApproxScalar(ApproxBase):
 
         # Return the larger of the relative and absolute tolerances.
         return max(relative_tolerance, absolute_tolerance)
+
+
+class ApproxDecimal(ApproxScalar):
+    from decimal import Decimal
+
+    DEFAULT_ABSOLUTE_TOLERANCE = Decimal('1e-12')
+    DEFAULT_RELATIVE_TOLERANCE = Decimal('1e-6')
 
 
 def approx(expected, rel=None, abs=None, nan_ok=False):
@@ -401,6 +410,7 @@ def approx(expected, rel=None, abs=None, nan_ok=False):
 
     from collections import Mapping, Sequence
     from _pytest.compat import STRING_TYPES as String
+    from decimal import Decimal
 
     # Delegate the comparison to a class that knows how to deal with the type
     # of the expected value (e.g. int, float, list, dict, numpy.array, etc).
@@ -422,6 +432,8 @@ def approx(expected, rel=None, abs=None, nan_ok=False):
         cls = ApproxMapping
     elif isinstance(expected, Sequence) and not isinstance(expected, String):
         cls = ApproxSequence
+    elif isinstance(expected, Decimal):
+        cls = ApproxDecimal
     else:
         cls = ApproxScalar
 
@@ -452,6 +464,10 @@ def raises(expected_exception, *args, **kwargs):
     """
     Assert that a code block/function call raises ``expected_exception``
     and raise a failure exception otherwise.
+
+    :arg message: if specified, provides a custom failure message if the
+        exception is not raised
+    :arg match: if specified, asserts that the exception matches a text or regex
 
     This helper produces a ``ExceptionInfo()`` object (see below).
 
@@ -567,7 +583,6 @@ def raises(expected_exception, *args, **kwargs):
             message = kwargs.pop("message")
         if "match" in kwargs:
             match_expr = kwargs.pop("match")
-            message += " matching '{0}'".format(match_expr)
         return RaisesContext(expected_exception, message, match_expr)
     elif isinstance(args[0], str):
         code, = args
@@ -614,6 +629,6 @@ class RaisesContext(object):
         suppress_exception = issubclass(self.excinfo.type, self.expected_exception)
         if sys.version_info[0] == 2 and suppress_exception:
             sys.exc_clear()
-        if self.match_expr:
+        if self.match_expr and suppress_exception:
             self.excinfo.match(self.match_expr)
         return suppress_exception
