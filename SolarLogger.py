@@ -14,6 +14,7 @@ import logging
 
 import solarlogger.serialreader.SerialReader as serialReader
 import solarlogger.zmqbroadcaster.ZmqBroadcaster as zmqBroadcaster
+import solarlogger.zmqlistener.ZmqListener as zmqListener
 import solarlogger.dataimporter.DataImporter as dataImporter
 import solarlogger.zmqdiagnostics.ZmqDiagnostics as zmqDiagnostics
 
@@ -22,6 +23,7 @@ import solarlogger.zmqdiagnostics.ZmqDiagnostics as zmqDiagnostics
 
 serial_reader = serialReader.SerialReader()
 zmq_broadcaster = zmqBroadcaster.ZmqBroadcaster()
+zmq_listener = zmqListener.ZmqListener()
 zmq_diagnostics = zmqDiagnostics.ZmqDiagnostics()
 data_importer = dataImporter.DataImporter()
 json_format = [
@@ -40,7 +42,7 @@ json_format = [
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-def activate_zmq_diagnostics():
+def startup_zmq_diagnostics():
     """
     Creates a zmq listener thread that subscribes to all topics
     :return:
@@ -64,17 +66,29 @@ def read_config_file():
     serial_reader.baud = config['SERIALPORT']['baud']
     serial_reader.stop = config['SERIALPORT']['stop']
     zmq_broadcaster.topic = config['ZMQ']['topic']
+    zmq_broadcaster.broadcaster = config['ZMQ']['broadcaster']
+    zmq_listener.broadcaster = config['ZMQ']['broadcaster']
+    zmq_listener.topic = config['ZMQ']['topic']
+
     data_importer.input_json_file = config['SOLAR']['input_json_file']
     data_importer.input_csv_file = config['SOLAR']['input_csv_file']
 
+
 def startup_zmq_broadcaster():
     """
-    Starts up the zmq broadcaster and the zmq diagnostic threads
+    Starts up the zmq broadcaster
     :return:
     """
     zmq_broadcaster.open_zmq()
-    activate_zmq_diagnostics()
 
+def startup_zmq_listener():
+    """
+    Starts up the zmq listener
+    :return:
+    """
+    zmq_listener.open_zmq()
+    thread = Thread(target=zmq_listener.receive_zmq_messages(), args=[])
+    thread.start()
 
 def load_existing_data():
     """
@@ -130,9 +144,10 @@ def main():
     logger.info('Startup of Solar Logging system')
     read_config_file()
     startup_zmq_broadcaster()
+#    startup_zmq_diagnostics()
     load_existing_data()
 #   startup_serial_data()
-#   startup_zmq_listener
+    startup_zmq_listener()
 #   startup_service_uploader
 
 
