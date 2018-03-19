@@ -1,1 +1,7 @@
-{}
+{
+  "unit/zmqserialbroadcaster/dataimporter/test_dataImporter.py::TestDataImporter::test_get_data": true,
+  "unit/zmqserialbroadcaster/dataimporter/test_dataImporter.py::TestDataImporter::test_read_from_file": true,
+  "unit/zmqserialbroadcaster/serialreader/test_SerialReader.py::TestSerialReader::test_object_cannot_be_created_without_device": true,
+  "unit/zmqserialbroadcaster/serialreader/test_SerialReader.py::TestSerialReader::test_object_cannot_be_created_wth_non_existant_serial_device": true,
+  "unit/zmqserialbroadcaster/serialreader/test_SerialReader.py::TestSerialReader::test_object_cannot_be_created_wth_non_serial_device": true
+}

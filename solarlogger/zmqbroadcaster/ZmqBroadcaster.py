@@ -5,6 +5,8 @@
 
 import zmq
 import logging
+import threading
+import queue
 
 
 class ZmqBroadcaster:
@@ -17,8 +19,10 @@ class ZmqBroadcaster:
         self._context = zmq.Context()
         self._socket = self._context.socket(zmq.PUB)
         self.is_socket_open = False
-        logging.basicConfig(level=logging.DEBUG)
+        logging.basicConfig(level=logging.DEBUG, format='(%(threadName)-9s) %(message)s',)
         self.logger = logging.getLogger(__name__)
+        self.data_queue = queue.Queue()
+        self.consumer_thread = None
 
     def open_zmq(self):
         """
@@ -62,3 +66,25 @@ class ZmqBroadcaster:
         else:
             self.logger.error("ZMQ message topic not set")
             raise zmq.error.ZMQError
+
+    def start_thread(self):
+        self.consumer_thread = ConsumerThread(name='zmq_consumer_of_data', queue=self.data_queue, instance=self)
+        self.consumer_thread.start()
+
+
+class ConsumerThread(threading.Thread):
+    def __init__(self, group=None, target=None, name=None,
+                 args=(), kwargs=None, verbose=None, queue=None, instance=None):
+        super(ConsumerThread, self).__init__()
+        self.target = target
+        self.name = name
+        self.queue = queue
+        self.instance = instance
+        return
+
+    def run(self):
+        while True:
+            if not self.queue.empty():
+                item = self.queue.get()
+                self.instance.write_data(item)
+        return

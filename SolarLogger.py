@@ -11,6 +11,7 @@ import configparser
 import pprint
 from threading import Thread
 import logging
+import queue
 
 import solarlogger.serialreader.SerialReader as serialReader
 import solarlogger.zmqbroadcaster.ZmqBroadcaster as zmqBroadcaster
@@ -20,7 +21,8 @@ import solarlogger.zmqdiagnostics.ZmqDiagnostics as zmqDiagnostics
 
 
 # Global variables
-
+BUF_SIZE = 1024
+serial_data_queue = queue.Queue(BUF_SIZE)
 serial_reader = serialReader.SerialReader()
 zmq_broadcaster = zmqBroadcaster.ZmqBroadcaster()
 zmq_listener = zmqListener.ZmqListener()
@@ -79,7 +81,9 @@ def startup_zmq_broadcaster():
     Starts up the zmq broadcaster
     :return:
     """
+    zmq_broadcaster.data_queue = serial_data_queue
     zmq_broadcaster.open_zmq()
+    zmq_broadcaster.start_thread()
 
 def startup_zmq_listener():
     """
@@ -111,24 +115,27 @@ def startup_serial_data():
     Starts thread for reading serial data and broadcasting via zmq
     :return:
     """
+    serial_reader.data_queue = serial_data_queue
+
     try:
         serial_reader.open_port()
     except Exception:
         logger.error("Could not open serial port " + serial_reader.device)
         exit(1)
     serial_reader.json_format = json_format
-    thread = Thread(target=read_serial_data(), args=[])
-    thread.start()
+    # thread = Thread(target=read_serial_data(), args=[])
+    # thread.start()
+    serial_reader.start_thread()
 
-
-def read_serial_data():
-    """
-    Starts reading serial data and broadcasting via zmq
-    :return: Never returns
-    """
-    while 1:
-        serial_reader.read_data()
-        zmq_broadcaster.write_data(serial_reader.json_data)
+# def read_serial_data():
+#     """
+#     Starts reading serial data and broadcasting via zmq
+#     :return: Never returns
+#     """
+#     # TODO replace wit queue startups
+#     while 1:
+#         serial_reader.read_data()
+#         zmq_broadcaster.write_data(serial_reader.json_data)
 
 
 def main():

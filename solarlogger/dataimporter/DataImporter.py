@@ -5,6 +5,8 @@ from pprint import pprint
 import json
 import logging
 import csv
+import threading
+import queue
 
 
 class DataImporter:
@@ -18,8 +20,9 @@ class DataImporter:
         self.json_data = []
         self._raw_data =[]
         self.json_format = None
-        logging.basicConfig(level=logging.DEBUG)
+        logging.basicConfig(level=logging.DEBUG, format='(%(threadName)-9s) %(message)s',)
         self.logger = logging.getLogger(__name__)
+        self.producer_thread = None
 
     def read_from_json_file(self):
         """

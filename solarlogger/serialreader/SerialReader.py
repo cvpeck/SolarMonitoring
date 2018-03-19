@@ -5,6 +5,8 @@
 import serial
 import logging
 import json
+import threading
+import queue
 from pylibftdi import Device
 from pylibftdi import FtdiError
 
@@ -22,8 +24,10 @@ class SerialReader:
         self.serial_connection = None
         self.json_format = None
         self.json_data = None
-        logging.basicConfig(level=logging.DEBUG)
+        logging.basicConfig(level=logging.DEBUG, format='(%(threadName)-9s) %(message)s',)
         self.logger = logging.getLogger(__name__)
+        self.data_queue = queue.Queue()
+        self.producer_thread = None
 
     def open_port(self):
         """ Attempts to open port, first as an ftdi device, then as a plain serial device """
@@ -94,3 +98,26 @@ class SerialReader:
                 self.logger.debug('raw data - %s', raw_data)
                 json_item = json.encode(self.json_format[i], raw_data)
                 self.logger.debug('encoded data - %s', json_item)
+
+    def start_thread(self):
+        self.producer_thread = ProducerThread(name='serial_producer_of_data', queue=self.data_queue, instance=self)
+        self.producer_thread.start()
+
+
+class ProducerThread(threading.Thread):
+    def __init__(self, group=None, target=None, name=None,
+                 args=(), kwargs=None, verbose=None, queue=None, instance=None):
+        super(ProducerThread,self).__init__()
+        self.target = target
+        self.name = name
+        self.queue = queue
+        self.instance = instance
+
+    def run(self):
+        while True:
+            if not self.queue.full():
+                item = self.instance.read_data()
+                self.queue.put(item)
+                logging.debug('Putting ' + str(item)
+                              + ' : ' + str(queue.qsize()) + ' items in queue')
+        return
