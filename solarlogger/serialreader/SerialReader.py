@@ -29,6 +29,10 @@ class SerialReader:
         self.data_queue = queue.Queue()
         self.producer_thread = None
 
+    def set_log_level(self, level):
+        self.logger.setLevel(level)
+
+
     def open_port(self):
         """ Attempts to open port, first as an ftdi device, then as a plain serial device """
         if not self.is_port_open:
@@ -102,6 +106,9 @@ class SerialReader:
     def start_thread(self):
         self.producer_thread = ProducerThread(name='serial_producer_of_data', queue=self.data_queue, instance=self)
         self.producer_thread.start()
+
+    def stop_thread(self):
+        self.producer_thread.stop()
 
 
 class ProducerThread(threading.Thread):

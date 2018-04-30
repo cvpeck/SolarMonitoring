@@ -20,9 +20,12 @@ class DataImporter:
         self.json_data = []
         self._raw_data =[]
         self.json_format = None
-        logging.basicConfig(level=logging.DEBUG, format='(%(threadName)-9s) %(message)s',)
+        self.log_level = logging.DEBUG
+        logging.basicConfig(level=self.log_level, format='(%(threadName)-9s) %(message)s',)
         self.logger = logging.getLogger(__name__)
-        self.producer_thread = None
+
+    def set_log_level(self, level):
+        self.logger.setLevel(level)
 
     def read_from_json_file(self):
         """
@@ -64,7 +67,7 @@ class DataImporter:
                     temp2 = dict(zip(tuple[::2], tuple[1::2]))
                     #self.logger.debug('temp2 - %s', temp2)
                     temp3.update(temp2)
-                print (json.dumps(temp3))
+                # print (json.dumps(temp3))
                 self.json_data.append(temp3)
 
 

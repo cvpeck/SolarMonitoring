@@ -12,6 +12,7 @@ import pprint
 from threading import Thread
 import logging
 import queue
+import signal
 
 import solarlogger.serialreader.SerialReader as serialReader
 import solarlogger.zmqbroadcaster.ZmqBroadcaster as zmqBroadcaster
@@ -21,8 +22,14 @@ import solarlogger.zmqdiagnostics.ZmqDiagnostics as zmqDiagnostics
 
 
 # Global variables
-BUF_SIZE = 1024
+solar_log_level = logging.DEBUG
+zmq_listener_log_level = logging.DEBUG
+zmq_broadcaster_log_level = logging.DEBUG
+data_importer_log_level = logging.INFO
+logger = None
+BUF_SIZE = 10000
 serial_data_queue = queue.Queue(BUF_SIZE)
+solar_data_queue = queue.Queue(BUF_SIZE)
 serial_reader = serialReader.SerialReader()
 zmq_broadcaster = zmqBroadcaster.ZmqBroadcaster()
 zmq_listener = zmqListener.ZmqListener()
@@ -41,8 +48,14 @@ json_format = [
             'UnitTemperature'
             ]
 
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+
+def startup_logging():
+    logging.basicConfig(level=solar_log_level)
+    global logger
+    logger = logging.getLogger(__name__)
+    zmq_listener.set_log_level(zmq_listener_log_level)
+    zmq_broadcaster.set_log_level(zmq_broadcaster_log_level)
+    data_importer.set_log_level(data_importer_log_level)
 
 def startup_zmq_diagnostics():
     """
@@ -68,13 +81,24 @@ def read_config_file():
     serial_reader.baud = config['SERIALPORT']['baud']
     serial_reader.stop = config['SERIALPORT']['stop']
     zmq_broadcaster.topic = config['ZMQ']['topic']
-    zmq_broadcaster.broadcaster = config['ZMQ']['broadcaster']
-    zmq_listener.broadcaster = config['ZMQ']['broadcaster']
+    zmq_broadcaster.broadcaster = config['ZMQ']['publisher']
+    zmq_listener.broadcaster = config['ZMQ']['publisher']
     zmq_listener.topic = config['ZMQ']['topic']
 
     data_importer.input_json_file = config['SOLAR']['input_json_file']
     data_importer.input_csv_file = config['SOLAR']['input_csv_file']
 
+def setup_signal_handlers():
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
+
+
+def signal_handler(signum, frame):
+    logger.info('Handling signal: %s \n' % signum)
+    zmq_broadcaster.stop_thread()
+    zmq_listener.stop_thread()
+    serial_reader.stop_thread()
+    exit(False)
 
 def startup_zmq_broadcaster():
     """
@@ -90,9 +114,10 @@ def startup_zmq_listener():
     Starts up the zmq listener
     :return:
     """
+    zmq_listener.port = zmq_broadcaster.port
+    zmq_listener.data_queue = solar_data_queue
     zmq_listener.open_zmq()
-    thread = Thread(target=zmq_listener.receive_zmq_messages(), args=[])
-    thread.start()
+    zmq_listener.start_thread()
 
 def load_existing_data():
     """
@@ -102,12 +127,12 @@ def load_existing_data():
     data_importer.json_format = json_format
     # loads data from csv file
     imported_data = data_importer.read_from_csv_file()
+    logger.debug('Loading existing data')
     for entry in imported_data:
-        zmq_broadcaster.write_data(entry)
+        zmq_broadcaster.add_data(entry)
     # loads data from json file
-    # print(json.dumps(data))
-#    for entry in data_importer.read_from_json_file():
-#        zmq_broadcaster.write_data(entry)
+    # for entry in data_importer.read_from_json_file():
+    #   zmq_broadcaster.add_data(entry)
 
 
 def startup_serial_data():
@@ -132,7 +157,7 @@ def startup_serial_data():
 #     Starts reading serial data and broadcasting via zmq
 #     :return: Never returns
 #     """
-#     # TODO replace wit queue startups
+#     # TODO replace with queue startups
 #     while 1:
 #         serial_reader.read_data()
 #         zmq_broadcaster.write_data(serial_reader.json_data)
@@ -148,13 +173,15 @@ def main():
     if not args:
         print('usage: [config file] ')
         sys.exit(1)
+    startup_logging()
+    setup_signal_handlers()
     logger.info('Startup of Solar Logging system')
     read_config_file()
     startup_zmq_broadcaster()
 #    startup_zmq_diagnostics()
+    startup_zmq_listener()
     load_existing_data()
 #   startup_serial_data()
-    startup_zmq_listener()
 #   startup_service_uploader
 
 
